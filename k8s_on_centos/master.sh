@@ -1,5 +1,11 @@
 #!/bin/bash
 
+echo "Preferred hostname:"
+read hostname
+
+echo "System ip address:"
+read ip_address
+
 #Updating the system
 sudo yum update -y && sudo yum upgrade -y
 
@@ -55,10 +61,10 @@ sudo sed -i '/swap/d' /etc/fstab
 sudo swapoff -a
 
 #Adding the an entry to the hosts file
-sed -i -e '$a${ip_address} ${hostname}' /etc/hosts  <--- To be edited
+sed -i -e '$a$ip_address $hostname' /etc/hosts
 
 #Pulling configuration images
 sudo kubeadm config images pull --cri-socket /run/containerd/containerd.sock
 
 #Creating the master-node
-sudo kubeadm init --pod-network-cidr=192.168.0.0/16 --upload-certs --control-plane-endpoint=${hostname}
+sudo kubeadm init --pod-network-cidr=192.168.0.0/16 --upload-certs --control-plane-endpoint=$hostname
