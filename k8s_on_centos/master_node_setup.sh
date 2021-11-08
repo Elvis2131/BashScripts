@@ -1,4 +1,18 @@
-!#/bin/bash
+#!/bin/bash
+
+#Updating the system
+sudo yum update -y && sudo yum upgrade -y
+
+#Setting the hostname of the machine
+sudo hostnamectl set-hostname $hostname     <--- To be edited
+
+#Installing containerd
+wget https://download.docker.com/linux/centos/7/x86_64/stable/Packages/containerd.io-1.2.6-3.3.el7.x86_64.rpm
+yum localinstall containerd.io-1.2.6-3.3.el7.x86_64.rpm -y
+
+#Enabling the containerd runtime for runtime
+sudo systemctl start containerd
+sudo systemctl enable containerd
 
 #Setting up the k8s repo
 cat <<EOF > /etc/yum.repos.d/kubernetes.repo
@@ -30,7 +44,7 @@ cat <<EOF > /etc/sysctl.d/k8s.conf
 net.bridge.bridge-nf-call-ip6tables = 1
 net.bridge.bridge-nf-call-iptables = 1
 EOF
-sysctl --system
+sudo sysctl --system
 
 #Disbale SELinux
 sudo setenforce 0
@@ -40,6 +54,7 @@ sudo sed -e 's/SELINUX=enforcing/SELINUX=permissive/' /etc/selinux/config
 sudo sed -i '/swap/d' /etc/fstab
 sudo swapoff -a
 
-#Installing containerd
-wget https://download.docker.com/linux/centos/7/x86_64/stable/Packages/containerd.io-1.2.6-3.3.el7.x86_64.rpm
-yum localinstall containerd.io-1.2.6-3.3.el7.x86_64.rpm
+#Adding the 
+
+#Pulling configuration images
+sudo kubeadm config images pull --cri-socket /run/containerd/containerd.sock
