@@ -10,7 +10,7 @@ read ip_address
 sudo yum update -y && sudo yum upgrade -y
 
 #Setting the hostname of the machine
-sudo hostnamectl set-hostname $hostname     <--- To be edited
+sudo hostnamectl set-hostname $hostname
 
 #Installing containerd
 sudo wget https://download.docker.com/linux/centos/7/x86_64/stable/Packages/containerd.io-1.2.6-3.3.el7.x86_64.rpm
