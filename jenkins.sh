@@ -13,10 +13,10 @@ sudo yum update -y && sudo yum upgrade -y
 #Getting the jenkins repo and importing it.
 sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
 sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io.key
-sudo yum upgrade
+sudo yum upgrade -y
 
 #Installing the jenkins package.
-sudo yum install epel-release java-11-openjdk-devel
+sudo yum install epel-release java-11-openjdk-devel -y
 sudo yum install jenkins -y
 
 #Setting up the systemctl
