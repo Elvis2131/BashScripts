@@ -7,8 +7,8 @@ sudo yum update -y && sudo yum upgrade -y
 sudo hostnamectl set-hostname $hostname     <--- To be edited
 
 #Installing containerd
-wget https://download.docker.com/linux/centos/7/x86_64/stable/Packages/containerd.io-1.2.6-3.3.el7.x86_64.rpm
-yum localinstall containerd.io-1.2.6-3.3.el7.x86_64.rpm -y
+sudo wget https://download.docker.com/linux/centos/7/x86_64/stable/Packages/containerd.io-1.2.6-3.3.el7.x86_64.rpm
+sudo yum localinstall containerd.io-1.2.6-3.3.el7.x86_64.rpm -y
 
 #Enabling the containerd runtime for runtime
 sudo systemctl start containerd
@@ -54,7 +54,11 @@ sudo sed -e 's/SELINUX=enforcing/SELINUX=permissive/' /etc/selinux/config
 sudo sed -i '/swap/d' /etc/fstab
 sudo swapoff -a
 
-#Adding the 
+#Adding the an entry to the hosts file
+sed -i -e '$a${ip_address} ${hostname}' /etc/hosts  <--- To be edited
 
 #Pulling configuration images
 sudo kubeadm config images pull --cri-socket /run/containerd/containerd.sock
+
+#Creating the master-node
+sudo kubeadm init --pod-network-cidr=192.168.0.0/16 --upload-certs --control-plane-endpoint=${hostname}
