@@ -31,40 +31,55 @@ repo_gpgcheck=1
 gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
 EOF
 
+sudo yum -y update
 #Installing kubelet, kubeadm and kubectl
 sudo yum install -y kubelet kubeadm kubectl
 systemctl enable kubelet
 systemctl start kubelet
 
 #Setting up the firewall rules
-sudo firewall-cmd --permanent --add-port=6443/tcp
-sudo firewall-cmd --permanent --add-port=2379-2380/tcp
-sudo firewall-cmd --permanent --add-port=10250/tcp
-sudo firewall-cmd --permanent --add-port=10251/tcp
-sudo firewall-cmd --permanent --add-port=10252/tcp
-sudo firewall-cmd --permanent --add-port=10255/tcp
-sudo firewall-cmd --reload
+sudo systemctl disable firewalld
+sudo systemctl stop firewalld
 
-#Updating the Iptables Settings
-cat <<EOF > /etc/sysctl.d/k8s.conf
-net.bridge.bridge-nf-call-ip6tables = 1
-net.bridge.bridge-nf-call-iptables = 1
-EOF
-sudo sysctl --system
-
-#Disbale SELinux
-sudo setenforce 0
-sudo sed -e 's/SELINUX=enforcing/SELINUX=permissive/' /etc/selinux/config
-
-#Disable SWAP
-sudo sed -i '/swap/d' /etc/fstab
+sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
 sudo swapoff -a
 
-#Adding the an entry to the hosts file
-sed -i -e '$a$ip_address $hostname' /etc/hosts
+# Enable kernel modules
+sudo modprobe overlay
+sudo modprobe br_netfilter
 
-#Pulling configuration images
+# Add some settings to sysctl
+sudo tee /etc/sysctl.d/kubernetes.conf<<EOF
+net.bridge.bridge-nf-call-ip6tables = 1
+net.bridge.bridge-nf-call-iptables = 1
+net.ipv4.ip_forward = 1
+EOF
+
+# Reload sysctl
+sudo sysctl --system
+
+# Configure persistent loading of modules
+sudo tee /etc/modules-load.d/containerd.conf <<EOF
+overlay
+br_netfilter
+EOF
+
+# Load at runtime
+sudo modprobe overlay
+sudo modprobe br_netfilter
+
+# Ensure sysctl params are set
+sudo tee /etc/sysctl.d/kubernetes.conf<<EOF
+net.bridge.bridge-nf-call-ip6tables = 1
+net.bridge.bridge-nf-call-iptables = 1
+net.ipv4.ip_forward = 1
+EOF
+
+# Reload configs
+sudo sysctl --system
+
+sudo mkdir -p /etc/containerd
+sudo containerd config default>/etc/containerd/config.toml
+
+
 sudo kubeadm config images pull --cri-socket /run/containerd/containerd.sock
-
-#Creating the master-node
-sudo kubeadm init --pod-network-cidr=192.168.0.0/16 --upload-certs --control-plane-endpoint=$hostname
